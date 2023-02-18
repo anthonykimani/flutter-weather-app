@@ -15,6 +15,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: HomePage(),
     );
   }
@@ -31,6 +32,7 @@ class _HomePageState extends State<HomePage> {
   WeatherApiClient client = WeatherApiClient();
   Weather? data = Weather();
   String location = "Nairobi";
+  String newLocation = "";
 
   Future<void> getData() async {
     data = await client.getCurrentWeather(location);
@@ -50,54 +52,70 @@ class _HomePageState extends State<HomePage> {
             color: Colors.black,
           ),
         ),
-        body: Column(
-          children: [
-            FutureBuilder(
-              future: getData(),
-              builder: (context, snapshot){
-                if (snapshot.connectionState == ConnectionState.done) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      //creating a custom widget
-                      currentWeather(Icons.wb_sunny_rounded, "${data!.temp}°", "${data!.cityName}"),
-                      SizedBox(
-                        height: 20.0,
-                      ),
-                      Text(
-                        "Additional Information",
-                        style: TextStyle(
-                          fontSize: 24.0,
-                          color: Color(0xdd212121),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Divider(),
-                      SizedBox(
-                        height: 20.0,
-                      ),
-                      additionalInformation("${data!.wind}", "${data!.humidity}", "${data!.pressure}", "${data!.feels_like}"),
-                    ],
-                  );
-                }else if( snapshot.connectionState == ConnectionState.waiting){
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-                return Container();
-              },
+        body: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(),
+            child: Column(
+              children: [
+                FutureBuilder(
+                  future: getData(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          //creating a custom widget
+                          currentWeather(Icons.wb_sunny_rounded,
+                              "${data!.temp}°", "${data!.cityName}"),
+                          SizedBox(
+                            height: 20.0,
+                          ),
+                          Text(
+                            "Additional Information",
+                            style: TextStyle(
+                              fontSize: 24.0,
+                              color: Color(0xdd212121),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Divider(),
+                          SizedBox(
+                            height: 20.0,
+                          ),
+                          additionalInformation(
+                              "${data!.wind}",
+                              "${data!.humidity}",
+                              "${data!.pressure}",
+                              "${data!.feels_like}"),
+                        ],
+                      );
+                    } else if (snapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                    return Container();
+                  },
+                ),
+                TextField(
+                  onChanged: (text) {
+                    newLocation = text;
+                  },
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Search Weather by City',
+                  ),
+                ),
+                ElevatedButton(onPressed: (){
+                  setState(() {
+                    location = newLocation;
+                  });
+                }, child: Text("Search")),
+              ],
             ),
-            TextField(
-              onChanged: (text) {
-                location = text;
-              },
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Search Weather by City',
-              ),
-            ),
-          ],
-        )
+          ),
+        ),
     );
   }
 }
